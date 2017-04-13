@@ -134,16 +134,21 @@ class SelectorCV(ModelSelector):
                     logL = hmm_model.score(X_test,[lengths_test])
                     av_log.append(logL)
                 av = np.mean(av_log)
-                logs.append([av,hmm_model])
+                logs.append((int(av),hmm_model))
                    
             except  Exception as e:
                 # print(str(e))
                 pass
         if logs==[]:
             return None
-        sorted(logs,key=lambda x: x[0])
-        
-        return logs[0][1]
+        largest_log = max(logs,key=lambda x: x[0])
+        # print(smallest_log,[log[0]for log in logs],sorted([log[0]for log in logs]))
+        # for l in logs:
+        #     print(l[0],smallest_log)
+        #     if l[0]== smallest_log:
+        #         return l[1]
+        return largest_log[1]
+        # return logs[0][1]
                 # print("Train fold indices:{} Test fold indices:{}".format(cv_train_idx, cv_test_idx)) 
         # TODO implement model selection using CV
         #raise NotImplementedError

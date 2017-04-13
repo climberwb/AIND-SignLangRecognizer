@@ -102,7 +102,49 @@ class SelectorCV(ModelSelector):
     '''
 
     def select(self):
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
-
+        # warnings.filterwarnings("ignore", category=DeprecationWarning)
+       
+        hmm_model = None
+        logs = []
+        for num_states in range(self.min_n_components,self.max_n_components+1):
+            # TODO
+            # 1. implement create cv loop for test and train
+            # 2. find average log Likelihood of cross validation fold
+            # 3. pick the highest scoring model
+            split_method = KFold()
+            # print(self.sequences)
+            try:
+                av_log=[]
+                if(len(self.sequences)>2):
+                    for cv_train_idx, cv_test_idx in split_method.split(self.sequences):
+                        X_train, lengths_train = combine_sequences(cv_train_idx, self.sequences )
+                        X_test, lengths_test = combine_sequences(cv_test_idx, self.sequences)
+                        # print(X_test, lengths_test)
+                        hmm_model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
+                                        random_state=self.random_state, verbose=False).fit(X_train, lengths_train)
+                        logL = hmm_model.score(X_test,lengths_test)
+                        av_log.append(logL)
+                else:
+                    
+                    X_train, lengths_train = self.X[:self.lengths[0]],self.lengths[0]
+                    X_test, lengths_test = self.X[:self.lengths[1]],self.lengths[1]
+                    # print('else',X_test,lengths_test)
+                    hmm_model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
+                                        random_state=self.random_state, verbose=False).fit(X_train, [lengths_train])
+                    logL = hmm_model.score(X_test,[lengths_test])
+                    av_log.append(logL)
+                av = np.mean(av_log)
+                logs.append([av,hmm_model])
+                   
+            except  Exception as e:
+                # print(str(e))
+                pass
+        if logs==[]:
+            return None
+        sorted(logs,key=lambda x: x[0])
+        
+        return logs[0][1]
+                # print("Train fold indices:{} Test fold indices:{}".format(cv_train_idx, cv_test_idx)) 
         # TODO implement model selection using CV
-        raise NotImplementedError
+        #raise NotImplementedError
+        

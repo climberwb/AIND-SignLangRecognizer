@@ -69,6 +69,8 @@ def combine_sequences(split_index_list, sequences):
     :param sequences: list of feature sequences
     :return: tuple of list, list in format of X,lengths use in hmmlearn
     '''
+    
+ 
     sequences_fold = [sequences[idx] for idx in split_index_list]
     X = [item for sublist in sequences_fold for item in sublist]
     lengths = [len(sublist) for sublist in sequences_fold]

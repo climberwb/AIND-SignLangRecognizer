@@ -78,44 +78,27 @@ class SelectorBIC(ModelSelector):
         # and N is the number of data points
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         hmm_model = None
-        logs = []
+        bics = []
+        
         for num_states in range(self.min_n_components,self.max_n_components+1):
             # TODO
             # 1. implement create cv loop for test and train
             # 2. find average log Likelihood of cross validation fold
             # 3. pick the highest scoring model
-            split_method = KFold()
             # print(self.sequences)
             try:
-                av_log=[]
-                if(len(self.sequences)>2):
-                    for cv_train_idx, cv_test_idx in split_method.split(self.sequences):
-                        X_train, lengths_train = combine_sequences(cv_train_idx, self.sequences )
-                        X_test, lengths_test = combine_sequences(cv_test_idx, self.sequences)
-                        hmm_model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
-                                        random_state=self.random_state, verbose=False).fit(X_train, lengths_train)
-                        logL = hmm_model.score(X_test,lengths_test)
-                        BIC = -2 * logL + num_states * np.log(sum(lengths_train))
-                        av_log.append(BIC)
-                else:
-                    
-                    X_train, lengths_train = self.X[:self.lengths[0]],[self.lengths[0]]
-                    X_test, lengths_test = self.X[:self.lengths[1]],[self.lengths[1]]
-                    
-            
-                    hmm_model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
-                                        random_state=self.random_state, verbose=False).fit(X_train, lengths_train)
-                    logL = hmm_model.score(X_test,lengths_test)
-                    BIC = -2 * logL + num_states * np.log(sum(lengths_train))
-                    av_log.append(BIC)
-                av = min(av_log)
-                logs.append((av,hmm_model))
+
+                hmm_model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
+                                random_state=self.random_state, verbose=False).fit(self.X, self.lengths)
+                logL = hmm_model.score(self.X,self.lengths)
+                BIC = -2 * logL + num_states * np.log(sum(self.lengths))
+                bics.append((BIC,hmm_model))
                    
             except  Exception as e:
                 pass
-        if logs==[]:
+        if bics==[]:
             return None
-        largest_log = min(logs,key=lambda x: x[0])
+        largest_log = min(bics,key=lambda x: x[0])
         return largest_log[1]
 
 
@@ -132,7 +115,28 @@ class SelectorDIC(ModelSelector):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         # TODO implement model selection based on DIC scores
-        raise NotImplementedError
+        hmm_model = None
+        dics = []
+        data_of_all_other_words = [self.hwords[word] for word in self.words if word !=self.this_word]
+        M_minus_1 = (len(data_of_all_other_words)-1)
+        state_range = range(self.min_n_components,self.max_n_components+1)
+        models = []
+        try:
+            for num_states in state_range:
+                hmm_model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
+                random_state=self.random_state, verbose=False).fit(self.X, self.lengths)
+                logL = hmm_model.score(self.X,self.lengths)
+                models.append((logL,hmm_model))
+                # DIC = logL - 1/M_minus_1)SUM(log(P(X(all but i)
+                
+        except:
+            pass
+        for i,model in enumerate(models):
+            logL, hmm_model = model
+            DIC = logL - 1/(M_minus_1)*sum([model[1].score(word[0],word[1]) for word in data_of_all_other_words])
+            dics.append((DIC,model[1]))
+        largest_dic = max(dics,key=lambda x: x[0])
+        return largest_dic[1]
 
 
 class SelectorCV(ModelSelector):

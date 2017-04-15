@@ -34,7 +34,7 @@ class ModelSelector(object):
     def base_model(self, num_states):
         # with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=DeprecationWarning)
-        # warnings.filterwarnings("ignore", category=RuntimeWarning)
+        warnings.filterwarnings("ignore", category=RuntimeWarning)
         try:
             hmm_model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
                                     random_state=self.random_state, verbose=False).fit(self.X, self.lengths)
@@ -77,6 +77,7 @@ class SelectorBIC(ModelSelector):
         # p is the number of parameters, BIC = -2 * logL + num_states * np.log(sum(lengths_train))
         # and N is the number of data points
         warnings.filterwarnings("ignore", category=DeprecationWarning)
+        warnings.filterwarnings("ignore", category=RuntimeWarning)
         hmm_model = None
         bics = []
         
@@ -113,7 +114,7 @@ class SelectorDIC(ModelSelector):
 
     def select(self):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
-
+        warnings.filterwarnings("ignore", category=RuntimeWarning)
         # TODO implement model selection based on DIC scores
         hmm_model = None
         dics = []

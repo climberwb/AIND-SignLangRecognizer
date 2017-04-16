@@ -119,7 +119,7 @@ class SelectorDIC(ModelSelector):
         hmm_model = None
         dics = []
         data_of_all_other_words = [self.hwords[word] for word in self.words if word !=self.this_word]
-        M_minus_1 = (len(data_of_all_other_words)-1)
+        M_minus_1 = len(data_of_all_other_words)
         state_range = range(self.min_n_components,self.max_n_components+1)
         models = []
         try:
@@ -132,6 +132,8 @@ class SelectorDIC(ModelSelector):
                 
         except:
             pass
+        if dics == []:
+            return None
         for i,model in enumerate(models):
             logL, hmm_model = model
             DIC = logL - 1/(M_minus_1)*sum([model[1].score(word[0],word[1]) for word in data_of_all_other_words])

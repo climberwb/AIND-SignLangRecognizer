@@ -31,12 +31,14 @@ def recognize(models: dict, test_set: SinglesData):
         probs_dict={}
         
         for word,model in models.items():
+            probs_dict[word]  = float('-inf') 
             try:
-                probs_dict[word] = model.score(X,lengths)  
+                probs_dict[word] = model.score(X,lengths) 
                 if probs_dict[word] > blogL:
                     gword = word
                     blogL = probs_dict[word]
-            except:
+            except Exception as e:
+                # print(str(e))
                 pass
                     
         probabilities.append(probs_dict)    

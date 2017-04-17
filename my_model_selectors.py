@@ -130,14 +130,15 @@ class SelectorDIC(ModelSelector):
                 models.append((logL,hmm_model))
                 # DIC = logL - 1/M_minus_1)SUM(log(P(X(all but i)
                 
-        except:
+        except Exception as e:
             pass
-        if dics == []:
-            return None
+        
         for i,model in enumerate(models):
             logL, hmm_model = model
             DIC = logL - 1/(M_minus_1)*sum([model[1].score(word[0],word[1]) for word in data_of_all_other_words])
             dics.append((DIC,model[1]))
+        if dics == []:
+            return None
         largest_dic = max(dics,key=lambda x: x[0])
         return largest_dic[1]
 

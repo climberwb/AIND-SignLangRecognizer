@@ -149,7 +149,8 @@ class SelectorCV(ModelSelector):
     '''
 
     def select(self):
-        # warnings.filterwarnings("ignore", category=DeprecationWarning)
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        warnings.filterwarnings("ignore", category=RuntimeWarning)
         hmm_model = None
         logs = []
         for num_states in range(self.min_n_components,self.max_n_components+1):

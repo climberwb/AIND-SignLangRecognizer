@@ -82,11 +82,7 @@ class SelectorBIC(ModelSelector):
         bics = []
         
         for num_states in range(self.min_n_components,self.max_n_components+1):
-            # TODO
-            # 1. implement create cv loop for test and train
-            # 2. find average log Likelihood of cross validation fold
-            # 3. pick the highest scoring model
-            # print(self.sequences)
+       
             try:
 
                 hmm_model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,

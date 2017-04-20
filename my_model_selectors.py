@@ -6,6 +6,7 @@ import numpy as np
 from hmmlearn.hmm import GaussianHMM
 from sklearn.model_selection import KFold
 from asl_utils import combine_sequences
+import logging
 
 
 class ModelSelector(object):
@@ -92,7 +93,8 @@ class SelectorBIC(ModelSelector):
                 bics.append((BIC,hmm_model))
                    
             except  Exception as e:
-                pass
+                logging.info(str(e))
+                logging.basicConfig(filename='bic.log',level=logging.DEBUG)
         if bics==[]:
             return None
         largest_log = min(bics,key=lambda x: x[0])
@@ -127,7 +129,8 @@ class SelectorDIC(ModelSelector):
                 # DIC = logL - 1/M_minus_1)SUM(log(P(X(all but i)
                 
         except Exception as e:
-            pass
+            logging.info(str(e))
+            logging.basicConfig(filename='dic.log',level=logging.DEBUG)
         
         for i,model in enumerate(models):
             logL, hmm_model = model
@@ -180,7 +183,8 @@ class SelectorCV(ModelSelector):
                 logs.append((av,hmm_model))
                    
             except  Exception as e:
-                pass
+                logging.info(str(e))
+                logging.basicConfig(filename='cv.log',level=logging.DEBUG)
         if logs==[]:
             return None
         largest_log = max(logs,key=lambda x: x[0])

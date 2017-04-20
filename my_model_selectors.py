@@ -89,7 +89,9 @@ class SelectorBIC(ModelSelector):
                 hmm_model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
                                 random_state=self.random_state, verbose=False).fit(self.X, self.lengths)
                 logL = hmm_model.score(self.X,self.lengths)
-                BIC = -2 * logL + num_states * np.log(sum(self.lengths))
+                num_features = 4
+                p = num_states**2 + 2*num_states*num_features - 1
+                BIC = -2 * logL + p * np.log(sum(self.lengths))
                 bics.append((BIC,hmm_model))
                    
             except  Exception as e:

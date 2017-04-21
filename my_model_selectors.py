@@ -9,6 +9,7 @@ from asl_utils import combine_sequences
 import logging
 
 
+
 class ModelSelector(object):
     '''
     base class for model selection (strategy design pattern)
@@ -87,11 +88,11 @@ class SelectorBIC(ModelSelector):
             try:
 
                 hmm_model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
-                                random_state=self.random_state, verbose=False).fit(self.X, self.lengths)
+                                random_state=self.random_state, verbose=False).fit(self.X, self.lengths )
                 logL = hmm_model.score(self.X,self.lengths)
                 num_features = 4
                 p = num_states**2 + 2*num_states*num_features - 1
-                BIC = -2 * logL + p * np.log(sum(self.lengths))
+                BIC = -2 * logL + p * np.log(len(self.X))
                 bics.append((BIC,hmm_model))
                    
             except  Exception as e:
@@ -116,33 +117,49 @@ class SelectorDIC(ModelSelector):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         warnings.filterwarnings("ignore", category=RuntimeWarning)
         # TODO implement model selection based on DIC scores
-        hmm_model = None
-        dics = []
-        data_of_all_other_words = [self.hwords[word] for word in self.words if word !=self.this_word]
-        M_minus_1 = len(data_of_all_other_words)
-        state_range = range(self.min_n_components,self.max_n_components+1)
-        models = []
-        try:
-            for num_states in state_range:
+        # for each of the num hidden components to try
+        # fit on train
+        # score on train
+        # score on everything else
+        # dhfhdf
+        results={}
+        antiRes={}
+       
+       
+        hmm_model=None
+        max_dic = float('-inf')
+        model = None
+        for num_states in range(self.min_n_components,self.max_n_components+1):
+            antiLogL = 0.0
+            wc = 0
+            
+            try:
                 hmm_model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
-                random_state=self.random_state, verbose=False).fit(self.X, self.lengths)
-                logL = hmm_model.score(self.X,self.lengths)
-                models.append((logL,hmm_model))
-                # DIC = logL - 1/M_minus_1)SUM(log(P(X(all but i)
+                                random_state=self.random_state, verbose=False).fit(self.X, self.lengths  )
+                logL = hmm_model.score(self.X, self.lengths)             
+                for word in self.hwords:
+                    if word == self.this_word:
+                        continue
+                    X, lengths = self.hwords[word]
+                    antiLogL += hmm_model.score(X, lengths)
+                    wc += 1
+            
+               # normalize
+                antiLogL /= float(wc)
+                # store off result
+                results[num_states] = logL
+                antiRes[num_states] = antiLogL
+                # comupte the dic diff
+                dic = results[num_states] -  antiRes[num_states]
+                if dic>max_dic:
+                    model=hmm_model
+                    max_dic = dic
                 
-        except Exception as e:
-            logging.info(str(e))
-            logging.basicConfig(filename='dic.log',level=logging.DEBUG)
-        
-        for i,model in enumerate(models):
-            logL, hmm_model = model
-            DIC = logL - 1/(M_minus_1)*sum([model[1].score(word[0],word[1]) for word in data_of_all_other_words])
-            dics.append((DIC,model[1]))
-        if dics == []:
-            return None
-        largest_dic = max(dics,key=lambda x: x[0])
-        return largest_dic[1]
-
+            except Exception as e:
+                logging.basicConfig(filename='dic.log',level=logging.DEBUG)
+                logging.debug(str(e))
+        # return model with largest dic
+        return model
 
 class SelectorCV(ModelSelector):
     ''' select best model based on average log Likelihood of cross-validation folds
